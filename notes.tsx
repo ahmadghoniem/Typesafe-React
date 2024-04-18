@@ -1,4 +1,12 @@
-import React, { ComponentProps, useCallback, useEffect, useState } from "react"
+import React, {
+  ComponentProps,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState
+} from "react"
 
 // > typing functional components <
 // React.JSX.Element could be inferred
@@ -207,10 +215,53 @@ const useTimeout = (timerMs: number) => {
 const MyTestCompnoent = () => {
   // const funcReturningStr: (userName: string) => string
   // typescript uses the type of the function being passed as a parameter and infers it to be the return type of the useCallback hook!
-  const helloUserFunc = useCallback(
+  // so in this case it's better if you relay on the inference of typescript
+  type helloUserFuncType = (userName: string) => void
+  const helloUserFunc = useCallback<helloUserFuncType>(
     (userName: string) => `hello, ${userName}`,
     []
   )
 }
+// NOTE: even though you are returning `hello, ${userName}` which is of type string a function that's typed to be returning void is not expected to be doing anything with it
+// so it's technically fine to do that
+const clear: () => void = () => "hey"
 
-// if you return void from a function that you expect to be returning
+// >Typing useMemo hook<
+
+export const Component = () => {
+  // function useMemo<T>(factory: () => T, deps: DependencyList): T;
+  // either to relay on the type inference of TS or type the return of the function that's being passed to the useMemo to avoid excess properties being added
+  type enemy = {
+    id: number
+    hp: number
+    weapon: string
+  }
+  const spawnEnemies = useMemo<enemy[]>(
+    () =>
+      // generate 100 random string uuid's
+      Array.from(
+        { length: 100 },
+        (_, i): enemy => ({
+          id: i,
+          hp: ~~Math.random() * i,
+          weapon: "sword",
+          name: "excess_property"
+        })
+      ),
+    []
+  )
+}
+
+// >Typing UseRef hook<
+
+export const TestComponent = () => {
+  const ref = useRef<HTMLDivElement>(null)
+  // hovering shows `HTMLDivElement | undefined` as javascript by default assign undefined to the value being passed to the useRef
+  // const ref = useRef<HTMLDivElement>(null); // the pattern that should be used moving forward
+  ref.current
+  // ref.current should never be undefined because by default react manages the ref for you so if the TestComponent gets unmounted react will set the ref to null
+  // so by setting null to the ref it  makes it a readonly ref and is managed by react.
+
+  return <div ref={ref} />
+}
+// > Typing useReducer <
