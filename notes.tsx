@@ -1,5 +1,6 @@
 import React, {
   ComponentProps,
+  Reducer,
   useCallback,
   useEffect,
   useMemo,
@@ -269,47 +270,53 @@ export const TestComponent = () => {
 const reducer = (state: unknown, action: unknown) => {
   switch (action.type) {
     case "add":
-      return { count: state.count + action.amount };
+      return { count: state.count + action.amount }
     case "subtract":
-      return { count: state.count - action.amount };
+      return { count: state.count - action.amount }
     default:
-      throw new Error();
+      throw new Error()
   }
-};
+}
 
-const [state, dispatch] = useReducer(reducer, { count: 0 });
+const [state, dispatch] = useReducer(reducer, { count: 0 })
+// state is typed as any and we are getting bunch of errors inside of our switch cases.
 
-
-// Now, we have proper typing for both the state and the action and the errors have gone away.
-// Note that before the switch statement, we won't be able to access action.add or action.subtract because there hasn't been a check to see which is which.
-// However, once we get inside of the switch we have done some narrowing so we'll be able to tell.
-
-// Organizing the Types
+// >> Organizing the Types <<
 // To make it easier to organize and potentially export the types, we can define intermediate types for ReducerState and ReducerAction:
 
 type ReducerState = {
-  count: number;
-};
+  count: number
+}
 
 // Using a Discriminated Union Type for the Action
 
 type ReducerAction =
   | {
-      type: "add";
-      add: number;
+      type: "add"
+      add: number
     }
   | {
-      type: "subtract";
-      subtract: number;
-    };
-
-const reducer = (state: ReducerState, action: ReducerAction) => {}
+      type: "subtract"
+      subtract: number
+    }
 
 // These types could now be exported as well.
 
-// Using the Built-in Reducer Type from React
+const reducer = (state: ReducerState, action: ReducerAction) => {}
+
+// >>Using the Built-in Reducer Type from React<<
+// type Reducer<S, A> = (prevState: S, action: A) => S
+
 // The third way to solve this challenge is by using the built-in Reducer type from React.
 // This would have us type the reducer on the function level:
 
 const reducer: Reducer<ReducerState, ReducerAction> = (state, action) => {
-  switch (action.type) {}
+  switch (action.type) {
+    case "add":
+      return { count: state.count + action.add }
+    case "subtract":
+      return { count: state.count - action.subtract }
+    default:
+      throw new Error()
+  }
+}
